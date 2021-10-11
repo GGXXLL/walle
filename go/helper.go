@@ -6,12 +6,19 @@ import (
 	"path/filepath"
 )
 
-func isRegularFile(f string) bool {
+func isRegularFile(f string) error {
 	fi, err := os.Stat(f)
-	if err != nil && !fi.Mode().IsRegular() {
-		return false
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%s is not exist", f)
+		}
+		return err
 	}
-	return true
+
+	if !fi.Mode().IsRegular() {
+		return fmt.Errorf("%s is not regular file", f)
+	}
+	return nil
 }
 
 //LittleEndian

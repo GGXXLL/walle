@@ -35,8 +35,11 @@ func (a *apk) All() map[string]string {
 }
 
 func NewApk(path string) (*apk, error) {
-	if path == "" || !isRegularFile(path) {
-		return nil, errors.New("is not regular file")
+	if path == "" {
+		return nil, errors.New("path is empty string")
+	}
+	if err := isRegularFile(path); err != nil {
+		return nil, err
 	}
 	info, err := readInfo(path)
 	if err != nil {
