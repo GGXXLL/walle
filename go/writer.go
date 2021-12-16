@@ -33,7 +33,8 @@ func (z *zipSections) writeTo(output string, transform transform) (err error) {
 		newZip.beforeSigningBlock,
 		newZip.signingBlock,
 		newZip.centraDir,
-		newZip.eocd} {
+		newZip.eocd,
+	} {
 		_, err := f.Write(s)
 		if err != nil {
 			return err
@@ -68,7 +69,7 @@ func newZipSections(input string) (z zipSections, err error) {
 	z.signingBlock = signingBlock
 	z.signingBlockOffset = signingBlockOffset
 	// read bytes before signing block
-	//TODO: waste too large memory
+	// TODO: waste too large memory
 	if signingBlockOffset >= 64*1024*1024 {
 		fmt.Print("Warning: maybe waste large memory on processing this apk! ")
 		fmt.Println("Before APK Signing Block bytes size is", signingBlockOffset/1024/1024, "MB")
@@ -102,7 +103,6 @@ func gen(info channelInfo, sections zipSections, output string) error {
 
 func newTransform(info channelInfo) transform {
 	return func(zip *zipSections) (*zipSections, error) {
-
 		newBlock, diffSize, err := makeSigningBlockWithInfo(info, zip.signingBlock)
 		if err != nil {
 			return nil, err

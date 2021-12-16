@@ -2,6 +2,7 @@ package _go_test
 
 import (
 	"fmt"
+
 	"github.com/GGXXLL/walle/go"
 )
 

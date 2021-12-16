@@ -3,7 +3,6 @@ package _go
 import "testing"
 
 func Test_isRegularFile(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		f       string

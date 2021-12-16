@@ -14,13 +14,27 @@ import (
 
 // Packer using the CMD command to call jar, so need java environment.
 type Packer struct {
-	JarPath  string
+	jarPath  string
 	_extract *regexp.Regexp
 }
 
-func NewPacker() (*Packer, error) {
-	path := "./pack.jar"
-	packer := &Packer{JarPath: path, _extract: regexp.MustCompile(`([\w.]+)=([\w.]+)`)}
+func WithJarPath(path string) func(*Packer) {
+	return func(p *Packer) {
+		p.jarPath = path
+	}
+}
+
+func NewPacker(opts ...func(*Packer)) (*Packer, error) {
+	packer := &Packer{jarPath: "", _extract: regexp.MustCompile(`([\w.]+)=([\w.]+)`)}
+	for _, opt := range opts {
+		opt(packer)
+	}
+	if packer.jarPath == "" {
+		packer.jarPath = "./pack.jar"
+	}
+	if _, err := pathExists(packer.jarPath); err != nil {
+		return nil, fmt.Errorf("jar path: %w, please copy the pack.jar to self project dir", err)
+	}
 	return packer, nil
 }
 
@@ -40,7 +54,6 @@ func (c command) string() string {
 }
 
 func (c command) baseApkPath(path string) {
-
 }
 
 func (c command) exec(ctx context.Context) (string, error) {
@@ -78,7 +91,7 @@ func (c command) exec(ctx context.Context) (string, error) {
 
 func (w *Packer) rootCmd() command {
 	cmd := "-jar %s"
-	return newCommand(cmd, w.JarPath)
+	return newCommand(cmd, w.jarPath)
 }
 
 func (w *Packer) showCmd(apkPath string) command {
@@ -173,9 +186,6 @@ func pathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
 	}
 	return false, err
 }

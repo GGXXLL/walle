@@ -199,33 +199,32 @@ func findEOCDRecord(f *os.File, maxCommentSize uint16) ([]byte, int64, error) {
 	if e != nil {
 		return nil, -1, err
 	}
-	eocdOffsetInFile :=
-		func() int64 {
-			eocdWithEmptyCommentStartPosition := n - _ZIP_EOCD_REC_MIN_SIZE
-			for expectedCommentLength := uint16(0); expectedCommentLength < maxCommentSize; expectedCommentLength++ {
-				eocdStartPos := eocdWithEmptyCommentStartPosition - int(expectedCommentLength)
-				if getUint32(buf, eocdStartPos) == _ZIP_EOCD_REC_SIG {
-					n := eocdStartPos + _ZIP_EOCD_COMMENT_LENGTH_FIELD_OFFSET
-					actualCommentLength := getUint16(buf, n)
-					if actualCommentLength == expectedCommentLength {
-						return int64(eocdStartPos)
-					}
+	eocdOffsetInFile := func() int64 {
+		eocdWithEmptyCommentStartPosition := n - _ZIP_EOCD_REC_MIN_SIZE
+		for expectedCommentLength := uint16(0); expectedCommentLength < maxCommentSize; expectedCommentLength++ {
+			eocdStartPos := eocdWithEmptyCommentStartPosition - int(expectedCommentLength)
+			if getUint32(buf, eocdStartPos) == _ZIP_EOCD_REC_SIG {
+				n := eocdStartPos + _ZIP_EOCD_COMMENT_LENGTH_FIELD_OFFSET
+				actualCommentLength := getUint16(buf, n)
+				if actualCommentLength == expectedCommentLength {
+					return int64(eocdStartPos)
 				}
 			}
-			return -1
-		}()
+		}
+		return -1
+	}()
 	if eocdOffsetInFile == -1 {
 		// No EoCD record found in the buffer
 		return nil, -1, nil
 	}
 	// EoCD found
 	return buf[eocdOffsetInFile:], bufOffsetInFile + eocdOffsetInFile, nil
-
 }
 
 func getEocdCentralDirectoryOffset(buf []byte) uint32 {
 	return getUint32(buf, _ZIP_EOCD_CENTRAL_DIR_OFFSET_FIELD_OFFSET)
 }
+
 func getEocdCentralDirectorySize(buf []byte) uint32 {
 	return getUint32(buf, _ZIP_EOCD_CENTRAL_DIR_SIZE_FIELD_OFFSET)
 }
@@ -283,7 +282,6 @@ func findIdValuesInApkSigningBlock(block []byte, ids ...uint32) (map[uint32][]by
 //	 uint64:  size (same as the one above)
 //	 uint128: magic
 func findApkSigningBlock(f *os.File, centralDirOffset uint32) (block []byte, offset int64, err error) {
-
 	if centralDirOffset < _APK_SIG_BLOCK_MIN_SIZE {
 		return block, offset, fmt.Errorf("APK too small for APK Signing Block."+
 			" ZIP Central Directory offset: %d", centralDirOffset)
@@ -296,7 +294,7 @@ func findApkSigningBlock(f *os.File, centralDirOffset uint32) (block []byte, off
 		return
 	}
 	// Read the magic and block size
-	var blockSizeInFooter = getUint64(footer, 0)
+	blockSizeInFooter := getUint64(footer, 0)
 	if blockSizeInFooter < 24 || blockSizeInFooter > uint64(math.MaxInt32-8 /* ID-value size field*/) {
 		return block, offset, fmt.Errorf("APK Signing Block size out of range: %d", blockSizeInFooter)
 	}
@@ -335,7 +333,6 @@ func findApkSigningBlock(f *os.File, centralDirOffset uint32) (block []byte, off
 // uint64:  size (same as the one above)
 // uint128: magic
 func makeSigningBlockWithInfo(info channelInfo, signingBlock []byte) ([]byte, int, error) {
-
 	signingBlockSize := getUint64(signingBlock, 0)
 	signingBlockLen := len(signingBlock)
 	if n := uint64(signingBlockLen - 8); signingBlockSize != n {

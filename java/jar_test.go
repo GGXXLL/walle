@@ -3,17 +3,16 @@ package wallepack
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-var jar Packer
-var testApkPath = `E:\GoProjects\src\ad_gains\packapk\base\b62a2d38360ea00854bff6df1d98161d.apk`
-
-func init() {
-	jar, _ = NewPacker()
-}
+var (
+	jar         *Packer
+	testApkPath = `E:\GoProjects\src\ad_gains\packapk\base\b62a2d38360ea00854bff6df1d98161d.apk`
+)
 
 func TestNewPacker(t *testing.T) {
 	o, _ := NewPacker()
@@ -21,24 +20,28 @@ func TestNewPacker(t *testing.T) {
 }
 
 func TestPackApkJar_ShowApk(t *testing.T) {
+	jar, _ = NewPacker()
 	r, err := jar.ShowApk(context.Background(), testApkPath)
 	assert.NoError(t, err)
 	fmt.Println(r)
 }
 
 func TestPackApkJar_ShowDir(t *testing.T) {
+	jar, _ = NewPacker()
 	r, err := jar.ShowDir(context.Background(), "E:\\GoProjects\\src\\ad_gains\\packapk\\base\\*")
 	assert.NoError(t, err)
 	fmt.Println(r)
 }
 
 func TestPackApkJar_PutChannel(t *testing.T) {
+	jar, _ = NewPacker()
 	r, err := jar.PutChannel(context.Background(), "test", testApkPath, "")
 	assert.NoError(t, err)
 	fmt.Println(r)
 }
 
 func TestPackApkJar_BatchChannels(t *testing.T) {
+	jar, _ = NewPacker()
 	r, err := jar.BatchChannels(context.Background(), []string{"test", "test1", "test2"}, testApkPath)
 	assert.NoError(t, err)
 	fmt.Println(r)

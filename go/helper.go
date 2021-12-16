@@ -21,14 +21,14 @@ func isRegularFile(f string) error {
 	return nil
 }
 
-//LittleEndian
+// LittleEndian
 func getUint16(b []byte, offset int) uint16 {
 	_ = b[offset+1] // early bounds check
 	return uint16(b[offset+0]) |
 		uint16(b[offset+1])<<8
 }
 
-//LittleEndian
+// LittleEndian
 func getUint32(b []byte, offset int) uint32 {
 	_ = b[offset+3] // early bounds check
 	return uint32(b[offset+0]) |
@@ -37,7 +37,7 @@ func getUint32(b []byte, offset int) uint32 {
 		uint32(b[offset+3])<<24
 }
 
-//LittleEndian
+// LittleEndian
 func getUint64(b []byte, offset int) uint64 {
 	_ = b[offset+7] // bounds check hint to compiler; see golang.org/issue/14808
 	return uint64(b[offset+0]) |
@@ -50,7 +50,7 @@ func getUint64(b []byte, offset int) uint64 {
 		uint64(b[offset+7])<<56
 }
 
-//LittleEndian
+// LittleEndian
 func putUint64(v uint64, b []byte, offset int) {
 	_ = b[offset+7] // early bounds check to guarantee safety of writes below
 	b[offset+0] = byte(v)
@@ -63,7 +63,7 @@ func putUint64(v uint64, b []byte, offset int) {
 	b[offset+7] = byte(v >> 56)
 }
 
-//LittleEndian
+// LittleEndian
 func putUint32(v uint32, b []byte, offset int) {
 	_ = b[offset+3]
 	b[offset+0] = byte(v)
@@ -72,7 +72,7 @@ func putUint32(v uint32, b []byte, offset int) {
 	b[offset+3] = byte(v >> 24)
 }
 
-//LittleEndian
+// LittleEndian
 func putUint16(v uint16, b []byte, offset int) {
 	_ = b[offset+1]
 	b[offset+0] = byte(v)
