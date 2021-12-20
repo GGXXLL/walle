@@ -28,6 +28,13 @@ const (
 	_ZIP_EOCD_CENTRAL_DIR_SIZE_FIELD_OFFSET   = 12
 	_ZIP_EOCD_CENTRAL_DIR_OFFSET_FIELD_OFFSET = 16
 	_ZIP_EOCD_COMMENT_LENGTH_FIELD_OFFSET     = 20
+
+	maxSigningBlockOffset = 64 * 1024 * 1024
+
+	// The padding in APK SIG BLOCK (V3 scheme introduced)
+	// See https://android.googlesource.com/platform/tools/apksig/+/master/src/main/java/com/android/apksig/internal/apk/ApkSigningBlockUtils.java
+	VERITY_PADDING_BLOCK_ID             = 0x42726577
+	ANDROID_COMMON_PAGE_ALIGNMENT_BYTES = 4096
 )
 
 type channelInfo struct {
@@ -252,6 +259,7 @@ func findIdValuesInApkSigningBlock(block []byte, ids ...uint32) (map[uint32][]by
 		if limit-position < 8 { // but not enough
 			return nil, fmt.Errorf("APK Signing Block broken on entry #%d", entryCount)
 		}
+
 		length := int(getUint64(block, position))
 		position += 8
 
@@ -261,7 +269,11 @@ func findIdValuesInApkSigningBlock(block []byte, ids ...uint32) (map[uint32][]by
 		}
 		nextEntryPosition := position + length
 		id := getUint32(block, position)
+		if id == VERITY_PADDING_BLOCK_ID {
+			return ret, nil
+		}
 		position += 4
+
 		if len(ids) == 0 || isExpected(ids, id) {
 			ret[id] = block[position : position+length-4]
 		}
@@ -320,7 +332,6 @@ func findApkSigningBlock(f *os.File, centralDirOffset uint32) (block []byte, off
 		return nil, offset, fmt.Errorf("APK Signing Block sizes in header "+
 			"and footer are mismatched! Except %d but %d", blockSizeInFooter, blockSizeInHeader)
 	}
-
 	return block, offset, nil
 }
 
@@ -330,6 +341,7 @@ func findApkSigningBlock(f *os.File, centralDirOffset uint32) (block []byte, off
 //     uint64:           size (excluding this field)
 //     uint32:           ID
 //     (size - 4) bytes: value
+// (extra dummy ID-value for padding to make block size a multiple of 4096 bytes)
 // uint64:  size (same as the one above)
 // uint128: magic
 func makeSigningBlockWithInfo(info channelInfo, signingBlock []byte) ([]byte, int, error) {
@@ -342,6 +354,18 @@ func makeSigningBlockWithInfo(info channelInfo, signingBlock []byte) ([]byte, in
 	channelValue := info.Bytes()
 	channelValueSize := uint64(4 + len(channelValue))
 	resultSize := 8 + signingBlockSize + 8 + channelValueSize
+
+	if s := resultSize % ANDROID_COMMON_PAGE_ALIGNMENT_BYTES; s != 0 {
+		padding := ANDROID_COMMON_PAGE_ALIGNMENT_BYTES - s
+		if padding <= 0 {
+			padding += ANDROID_COMMON_PAGE_ALIGNMENT_BYTES
+		}
+		b := make([]byte, padding)
+		putUint32(VERITY_PADDING_BLOCK_ID, channelValue, 0)
+		channelValue = append(channelValue, b...)
+		channelValueSize += padding
+		resultSize += padding
+	}
 
 	newBlock := make([]byte, resultSize)
 	position := 0

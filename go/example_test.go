@@ -14,7 +14,7 @@ func ExampleNewApk() {
 	fmt.Println(apk.Path())
 	fmt.Println(apk.Channel())
 	fmt.Println(apk.Extras())
-	newApk, err := apk.PutChannel("rrrr", "")
+	newApk, err := apk.PutChannel("aa", "")
 	if err != nil {
 		fmt.Println(err)
 		return

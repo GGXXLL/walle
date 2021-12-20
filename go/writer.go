@@ -70,7 +70,7 @@ func newZipSections(input string) (z zipSections, err error) {
 	z.signingBlockOffset = signingBlockOffset
 	// read bytes before signing block
 	// TODO: waste too large memory
-	if signingBlockOffset >= 64*1024*1024 {
+	if signingBlockOffset >= maxSigningBlockOffset {
 		fmt.Print("Warning: maybe waste large memory on processing this apk! ")
 		fmt.Println("Before APK Signing Block bytes size is", signingBlockOffset/1024/1024, "MB")
 	}

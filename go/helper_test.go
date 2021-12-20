@@ -1,6 +1,8 @@
 package _go
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_isRegularFile(t *testing.T) {
 	tests := []struct {
